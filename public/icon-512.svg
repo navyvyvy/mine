@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Endless Mine icon">
+  <rect width="512" height="512" rx="88" fill="#050505"/>
+  <circle cx="256" cy="250" r="170" fill="#1f1817"/>
+  <circle cx="256" cy="250" r="126" fill="#c14362" opacity=".34"/>
+  <path d="M171 315 310 176l36 36-139 139z" fill="#d8c4a3"/>
+  <path d="M299 155c43 5 75 27 96 64l-33 33c-20-28-48-44-85-49z" fill="#ede1c9"/>
+  <circle cx="192" cy="326" r="26" fill="#f4cb75"/>
+</svg>

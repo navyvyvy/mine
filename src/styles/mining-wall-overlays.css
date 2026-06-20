@@ -1,0 +1,46 @@
+.mining-face-wall-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.wall-seam {
+  fill: none;
+  stroke: oklch(0.035 0 0 / 0.5);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  mix-blend-mode: multiply;
+}
+
+.face-ore-seam-shadow,
+.face-ore-seam-color {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.face-ore-seam-shadow {
+  stroke: oklch(0.025 0 0 / 0.48);
+  stroke-width: 7.5;
+  opacity: 0.28;
+  mix-blend-mode: multiply;
+}
+
+.face-ore-seam-color {
+  stroke-width: 3.1;
+  stroke-dasharray: 10 12 2 9;
+  opacity: 0.24;
+  mix-blend-mode: multiply;
+  filter: blur(0.15px);
+}
+
+.vein-stone .face-ore-seam-color { stroke: oklch(0.54 0.014 68 / 0.52); }
+.vein-coal .face-ore-seam-color { stroke: oklch(0.13 0.006 250 / 0.7); }
+.vein-copper .face-ore-seam-color { stroke: oklch(0.5 0.08 48 / 0.58); }
+.vein-iron .face-ore-seam-color { stroke: oklch(0.5 0.035 58 / 0.58); }
+.vein-gold .face-ore-seam-color { stroke: oklch(0.6 0.08 84 / 0.56); }
+.vein-crystal .face-ore-seam-color { stroke: oklch(0.5 0.07 205 / 0.46); }
+.vein-diamond .face-ore-seam-color { stroke: oklch(0.56 0.07 192 / 0.44); }

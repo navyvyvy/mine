@@ -1,0 +1,501 @@
+.block-dirt {
+  --rock-base: oklch(0.29 0.04 54);
+  --rock-mid: oklch(0.21 0.03 48);
+  --rock-shadow: oklch(0.14 0.02 42);
+  --rock-highlight: oklch(0.43 0.05 58 / 0.86);
+  --rock-grain: oklch(0.52 0.045 58 / 0.16);
+  --ore-color: oklch(0.7 0.04 78);
+  --ore-bright: oklch(0.86 0.03 84);
+}
+
+.block-stone {
+  --rock-base: oklch(0.34 0.012 70);
+  --rock-mid: oklch(0.26 0.01 66);
+  --rock-shadow: oklch(0.17 0.009 58);
+  --rock-highlight: oklch(0.5 0.01 72 / 0.74);
+  --rock-grain: oklch(0.58 0.01 70 / 0.11);
+  --ore-color: oklch(0.74 0.05 84);
+  --ore-bright: oklch(0.92 0.03 92);
+}
+
+.block-ore {
+  --rock-base: oklch(0.28 0.016 56);
+  --rock-mid: oklch(0.2 0.012 52);
+  --rock-shadow: oklch(0.12 0.01 48);
+  --rock-highlight: oklch(0.43 0.018 64 / 0.84);
+  --rock-grain: oklch(0.54 0.018 58 / 0.13);
+}
+
+.block-coal {
+  --ore-color: oklch(0.18 0.01 250);
+  --ore-bright: oklch(0.62 0.01 86);
+}
+
+.block-copper {
+  --ore-color: oklch(0.64 0.14 48);
+  --ore-bright: oklch(0.82 0.09 70);
+}
+
+.block-iron {
+  --ore-color: oklch(0.6 0.05 62);
+  --ore-bright: oklch(0.84 0.04 86);
+}
+
+.block-gold {
+  --ore-color: oklch(0.84 0.13 86);
+  --ore-bright: oklch(0.97 0.05 96);
+}
+
+.block-crystal {
+  --ore-color: oklch(0.72 0.11 208);
+  --ore-bright: oklch(0.94 0.06 194);
+}
+
+.block-diamond {
+  --ore-color: oklch(0.81 0.12 194);
+  --ore-bright: oklch(0.97 0.04 186);
+}
+
+.block-diamond-core {
+  --rock-base: oklch(0.1 0.02 260);
+  --rock-mid: oklch(0.06 0.012 258);
+  --rock-shadow: oklch(0.03 0.006 255);
+  --rock-highlight: oklch(0.25 0.02 268 / 0.9);
+  --rock-grain: oklch(0.34 0.02 258 / 0.2);
+  --ore-color: oklch(0.8 0.14 194);
+  --ore-bright: oklch(0.98 0.06 186);
+}
+
+.mining-face-grid {
+  box-shadow:
+    inset 0 0 0 1px oklch(0.28 0.02 44 / 0.5),
+    inset 0 0 28px oklch(0.01 0 0 / 0.25),
+    0 18px 54px oklch(0.01 0 0 / 0.48);
+  background:
+    radial-gradient(circle at 50% 45%, oklch(0.08 0.015 42), oklch(0.04 0.01 34) 72%, oklch(0.015 0 0) 100%);
+}
+
+.mining-face-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background:
+    linear-gradient(90deg, transparent 0 32.7%, oklch(0.02 0 0 / 0.38) 33% 33.9%, transparent 34.1% 65.9%, oklch(0.02 0 0 / 0.38) 66.2% 67%, transparent 67.2%),
+    linear-gradient(180deg, transparent 0 32.7%, oklch(0.02 0 0 / 0.34) 33% 33.9%, transparent 34.1% 65.9%, oklch(0.02 0 0 / 0.34) 66.2% 67%, transparent 67.2%);
+  mix-blend-mode: multiply;
+  opacity: 0.82;
+}
+
+.mining-cell {
+  --surface-light-x: 64%;
+  --surface-light-y: 30%;
+  --surface-shadow-x: 30%;
+  --surface-shadow-y: 74%;
+  --stone-chip-x: 66%;
+  --stone-chip-y: 58%;
+  --grain-angle: 132deg;
+  --shadow-angle: 108deg;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  min-height: 0;
+  color: inherit;
+  appearance: none;
+  cursor: default;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, oklch(1 0 0 / 0.025), transparent 24%, oklch(0 0 0 / 0.18) 100%),
+    linear-gradient(135deg, oklch(1 0 0 / 0.03), transparent 32%),
+    linear-gradient(225deg, oklch(0 0 0 / 0.14), transparent 38%),
+    oklch(0.05 0.01 40);
+  box-shadow:
+    inset 0 0 0 1px oklch(0.01 0 0 / 0.42),
+    inset 0 0 0 4px oklch(1 0 0 / 0.02),
+    inset 0 -18px 24px oklch(0 0 0 / 0.18);
+  transition: filter 140ms ease-out, transform 140ms ease-out, box-shadow 140ms ease-out;
+}
+
+.mining-cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(145deg, oklch(1 0 0 / 0.04), transparent 30%),
+    linear-gradient(220deg, oklch(0 0 0 / 0.16), transparent 41%);
+  opacity: 0.76;
+  clip-path: polygon(3% 2%, 96% 0, 100% 8%, 99% 91%, 92% 100%, 8% 99%, 0 92%, 0 8%);
+}
+
+.cell-material {
+  position: absolute;
+  inset: 4px;
+  z-index: 0;
+  background:
+    linear-gradient(150deg, oklch(1 0 0 / 0.05), transparent 30%),
+    linear-gradient(220deg, oklch(0 0 0 / 0.16), transparent 40%),
+    linear-gradient(145deg, var(--rock-highlight), var(--rock-base) 36%, var(--rock-mid) 68%, var(--rock-shadow) 100%);
+  box-shadow:
+    inset 0 0 0 1px oklch(1 0 0 / 0.05),
+    inset 0 -10px 16px oklch(0 0 0 / 0.14);
+  filter: saturate(0.96) contrast(1.03);
+}
+
+.cell-material::before,
+.cell-material::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cell-material::before {
+  background:
+    linear-gradient(var(--grain-angle), transparent 0 30%, oklch(0 0 0 / 0.11) 31% 35%, transparent 36% 66%, var(--rock-grain) 67% 71%, transparent 72%),
+    linear-gradient(calc(var(--grain-angle) + 58deg), transparent 0 44%, oklch(0 0 0 / 0.08) 45% 48%, transparent 49% 100%),
+    linear-gradient(160deg, oklch(1 0 0 / 0.03), transparent 20%);
+  mix-blend-mode: multiply;
+  opacity: 0.62;
+}
+
+.cell-material::after {
+  background:
+    linear-gradient(var(--shadow-angle), transparent 0 54%, oklch(0 0 0 / 0.16) 55% 60%, transparent 61%),
+    linear-gradient(210deg, transparent 0 63%, oklch(0 0 0 / 0.1) 64% 68%, transparent 69%);
+  opacity: 0.6;
+  mix-blend-mode: multiply;
+}
+
+.mining-cell[data-cell-index="0"] {
+  --surface-light-x: 58%;
+  --surface-light-y: 31%;
+  --surface-shadow-x: 31%;
+  --surface-shadow-y: 76%;
+  --stone-chip-x: 70%;
+  --stone-chip-y: 60%;
+  --grain-angle: 126deg;
+  --shadow-angle: 102deg;
+}
+
+.mining-cell[data-cell-index="1"] {
+  --surface-light-x: 72%;
+  --surface-light-y: 34%;
+  --surface-shadow-x: 40%;
+  --surface-shadow-y: 72%;
+  --stone-chip-x: 43%;
+  --stone-chip-y: 63%;
+  --grain-angle: 146deg;
+  --shadow-angle: 118deg;
+}
+
+.mining-cell[data-cell-index="2"] {
+  --surface-light-x: 62%;
+  --surface-light-y: 42%;
+  --surface-shadow-x: 24%;
+  --surface-shadow-y: 70%;
+  --stone-chip-x: 76%;
+  --stone-chip-y: 69%;
+  --grain-angle: 117deg;
+  --shadow-angle: 94deg;
+}
+
+.mining-cell[data-cell-index="3"] {
+  --surface-light-x: 48%;
+  --surface-light-y: 29%;
+  --surface-shadow-x: 72%;
+  --surface-shadow-y: 76%;
+  --stone-chip-x: 34%;
+  --stone-chip-y: 58%;
+  --grain-angle: 139deg;
+  --shadow-angle: 128deg;
+}
+
+.mining-cell[data-cell-index="4"] {
+  --surface-light-x: 66%;
+  --surface-light-y: 36%;
+  --surface-shadow-x: 35%;
+  --surface-shadow-y: 78%;
+  --stone-chip-x: 55%;
+  --stone-chip-y: 68%;
+  --grain-angle: 130deg;
+  --shadow-angle: 110deg;
+}
+
+.mining-cell[data-cell-index="5"] {
+  --surface-light-x: 55%;
+  --surface-light-y: 25%;
+  --surface-shadow-x: 30%;
+  --surface-shadow-y: 66%;
+  --stone-chip-x: 72%;
+  --stone-chip-y: 54%;
+  --grain-angle: 151deg;
+  --shadow-angle: 122deg;
+}
+
+.mining-cell[data-cell-index="6"] {
+  --surface-light-x: 70%;
+  --surface-light-y: 62%;
+  --surface-shadow-x: 30%;
+  --surface-shadow-y: 34%;
+  --stone-chip-x: 47%;
+  --stone-chip-y: 72%;
+  --grain-angle: 112deg;
+  --shadow-angle: 86deg;
+}
+
+.mining-cell[data-cell-index="7"] {
+  --surface-light-x: 42%;
+  --surface-light-y: 36%;
+  --surface-shadow-x: 72%;
+  --surface-shadow-y: 72%;
+  --stone-chip-x: 63%;
+  --stone-chip-y: 55%;
+  --grain-angle: 142deg;
+  --shadow-angle: 132deg;
+}
+
+.mining-cell[data-cell-index="8"] {
+  --surface-light-x: 61%;
+  --surface-light-y: 32%;
+  --surface-shadow-x: 26%;
+  --surface-shadow-y: 70%;
+  --stone-chip-x: 74%;
+  --stone-chip-y: 64%;
+  --grain-angle: 122deg;
+  --shadow-angle: 100deg;
+}
+
+.mining-cell[data-cell-index="0"] .cell-material {
+  clip-path: polygon(0 0, 94% 0, 100% 8%, 98% 92%, 88% 100%, 10% 98%, 0 88%, 2% 8%);
+}
+
+.mining-cell[data-cell-index="1"] .cell-material {
+  clip-path: polygon(4% 0, 96% 0, 100% 10%, 98% 86%, 90% 100%, 8% 98%, 0 88%, 0 12%);
+}
+
+.mining-cell[data-cell-index="2"] .cell-material {
+  clip-path: polygon(8% 0, 100% 0, 98% 12%, 100% 88%, 90% 100%, 0 98%, 2% 86%, 0 8%);
+}
+
+.mining-cell[data-cell-index="3"] .cell-material {
+  clip-path: polygon(0 6%, 92% 0, 100% 10%, 98% 92%, 88% 100%, 6% 98%, 0 90%, 2% 10%);
+}
+
+.mining-cell[data-cell-index="4"] .cell-material {
+  clip-path: polygon(5% 0, 94% 2%, 100% 12%, 98% 90%, 88% 100%, 12% 98%, 0 88%, 2% 10%);
+}
+
+.mining-cell[data-cell-index="5"] .cell-material {
+  clip-path: polygon(0 0, 92% 0, 100% 8%, 98% 94%, 90% 100%, 4% 98%, 0 88%, 2% 12%);
+}
+
+.mining-cell[data-cell-index="6"] .cell-material {
+  clip-path: polygon(0 0, 90% 2%, 100% 8%, 98% 92%, 92% 100%, 8% 98%, 0 88%, 0 10%);
+}
+
+.mining-cell[data-cell-index="7"] .cell-material {
+  clip-path: polygon(3% 0, 96% 0, 100% 10%, 98% 90%, 90% 100%, 8% 98%, 0 90%, 0 8%);
+}
+
+.mining-cell[data-cell-index="8"] .cell-material {
+  clip-path: polygon(6% 0, 100% 0, 98% 8%, 100% 92%, 88% 100%, 0 98%, 2% 86%, 0 10%);
+}
+
+.mining-cell[data-cell-index="0"] .cell-material::before,
+.mining-cell[data-cell-index="0"] .cell-material::after {
+  transform: rotate(-6deg);
+}
+
+.mining-cell[data-cell-index="1"] .cell-material::before,
+.mining-cell[data-cell-index="1"] .cell-material::after {
+  transform: rotate(3deg) translateY(-1px);
+}
+
+.mining-cell[data-cell-index="2"] .cell-material::before,
+.mining-cell[data-cell-index="2"] .cell-material::after {
+  transform: scaleX(-1) rotate(7deg);
+}
+
+.mining-cell[data-cell-index="3"] .cell-material::before,
+.mining-cell[data-cell-index="3"] .cell-material::after {
+  transform: rotate(-10deg) translateX(-1px);
+}
+
+.mining-cell[data-cell-index="5"] .cell-material::before,
+.mining-cell[data-cell-index="5"] .cell-material::after {
+  transform: rotate(8deg) translateX(1px);
+}
+
+.mining-cell[data-cell-index="6"] .cell-material::before,
+.mining-cell[data-cell-index="6"] .cell-material::after {
+  transform: rotate(10deg);
+}
+
+.mining-cell[data-cell-index="7"] .cell-material::before,
+.mining-cell[data-cell-index="7"] .cell-material::after {
+  transform: rotate(-4deg) translateY(1px);
+}
+
+.mining-cell[data-cell-index="8"] .cell-material::before,
+.mining-cell[data-cell-index="8"] .cell-material::after {
+  transform: scaleX(-1) rotate(-8deg);
+}
+
+.embedded-ore {
+  position: absolute;
+  inset: 14% 12%;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.14;
+  background:
+    linear-gradient(116deg, transparent 0 18%, var(--ore-bright) 19% 24%, transparent 25% 42%, var(--ore-color) 43% 55%, transparent 56% 73%, var(--ore-bright) 74% 78%, transparent 79%),
+    radial-gradient(ellipse at 36% 48%, var(--ore-color) 0 11%, transparent 12%),
+    radial-gradient(ellipse at 68% 60%, var(--ore-color) 0 12%, transparent 13%),
+    radial-gradient(ellipse at 76% 34%, var(--ore-bright) 0 6%, transparent 7%);
+  clip-path: polygon(6% 62%, 17% 43%, 34% 49%, 50% 30%, 68% 40%, 91% 22%, 85% 47%, 68% 58%, 54% 78%, 31% 69%);
+  filter: saturate(1.15) brightness(1.08);
+  mix-blend-mode: screen;
+}
+
+.embedded-ore::before,
+.embedded-ore::after {
+  content: "";
+  position: absolute;
+  background: var(--ore-color);
+  border-radius: 999px;
+  opacity: 0.84;
+}
+
+.embedded-ore::before {
+  left: 10%;
+  top: 58%;
+  width: 42%;
+  height: 6px;
+  transform: rotate(-18deg);
+}
+
+.embedded-ore::after {
+  right: 13%;
+  top: 23%;
+  width: 24%;
+  height: 6px;
+  transform: rotate(-29deg);
+}
+
+.stage-intact .embedded-ore,
+.ore-stage-intact {
+  opacity: 0.1;
+  transform: scale(0.84);
+}
+
+.stage-chipped .embedded-ore,
+.ore-stage-chipped {
+  opacity: 0.2;
+}
+
+.stage-cracked .embedded-ore,
+.ore-stage-cracked {
+  opacity: 0.36;
+}
+
+.stage-exposed .embedded-ore,
+.ore-stage-exposed {
+  opacity: 0.62;
+}
+
+.stage-crumbling .embedded-ore,
+.ore-stage-crumbling {
+  opacity: 0.88;
+}
+
+.stage-empty .embedded-ore,
+.ore-stage-empty {
+  display: none;
+}
+
+.block-diamond-core .embedded-ore {
+  inset: 9% 8%;
+  opacity: 0.7;
+  clip-path: polygon(50% 4%, 68% 26%, 94% 48%, 67% 72%, 50% 96%, 33% 72%, 6% 48%, 32% 26%);
+  background:
+    radial-gradient(circle at 50% 50%, oklch(0.98 0.05 188 / 0.24), transparent 20%),
+    radial-gradient(circle at 28% 38%, var(--ore-bright) 0 7%, transparent 8%),
+    radial-gradient(circle at 72% 38%, var(--ore-bright) 0 7%, transparent 8%),
+    radial-gradient(circle at 50% 72%, var(--ore-color) 0 11%, transparent 12%),
+    linear-gradient(118deg, transparent 0 15%, var(--ore-bright) 16% 24%, transparent 25% 42%, var(--ore-color) 43% 57%, transparent 58% 75%, var(--ore-bright) 76% 83%, transparent 84%);
+}
+
+.stage-chipped .cell-material {
+  filter: brightness(0.99) saturate(0.98);
+}
+
+.stage-cracked .cell-material {
+  filter: brightness(0.96) saturate(0.97);
+}
+
+.stage-exposed .cell-material {
+  filter: brightness(0.92) saturate(0.96);
+}
+
+.stage-crumbling .cell-material {
+  filter: brightness(0.86) contrast(1.06) saturate(0.94);
+}
+
+.stage-empty .cell-material {
+  background:
+    radial-gradient(ellipse at 49% 45%, oklch(0.018 0 0), oklch(0.05 0.01 38) 48%, transparent 66%),
+    radial-gradient(ellipse at 70% 70%, oklch(0.16 0.02 42 / 0.72), transparent 38%),
+    linear-gradient(145deg, oklch(0.12 0.018 40), oklch(0.035 0 0) 78%);
+  filter: brightness(0.92) saturate(0.86);
+}
+
+.stage-empty .mining-cell::before {
+  opacity: 0.7;
+}
+
+.mining-cell.is-manual-ready:hover .cell-material {
+  filter: brightness(1.04) saturate(1.01);
+}
+
+.mining-cell.is-impact {
+  transform: translateY(1px);
+  filter: brightness(1.12) saturate(1.02);
+}
+
+.mining-cell.is-target {
+  box-shadow:
+    inset 0 0 0 1px oklch(0.78 0.07 76 / 0.2),
+    inset 0 0 0 4px oklch(0.12 0.02 44 / 0.16),
+    inset 0 0 22px oklch(0.7 0.08 74 / 0.08),
+    0 0 0 1px oklch(0.76 0.07 74 / 0.12);
+}
+
+.mining-cell.is-target::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background:
+    linear-gradient(140deg, transparent 0 44%, oklch(0.75 0.08 74 / 0.18) 45% 47%, transparent 48% 100%),
+    linear-gradient(220deg, transparent 0 58%, oklch(0.86 0.08 76 / 0.1) 59% 61%, transparent 62% 100%);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+
+.mining-cell.is-target::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  background:
+    linear-gradient(152deg, transparent 0 54%, oklch(0.02 0 0 / 0.18) 55% 58%, transparent 59% 100%),
+    linear-gradient(34deg, transparent 0 71%, oklch(0.7 0.06 72 / 0.12) 72% 75%, transparent 76% 100%);
+  mix-blend-mode: multiply;
+  opacity: 0.58;
+}

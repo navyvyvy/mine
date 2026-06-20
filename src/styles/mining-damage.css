@@ -1,0 +1,266 @@
+.cell-damage-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  overflow: visible;
+  opacity: 0.98;
+  filter: saturate(0.92) contrast(1.04);
+}
+
+.damage-layer {
+  transform-origin: 50% 50%;
+}
+
+.damage-main-crack,
+.damage-main-crack-edge,
+.damage-branch,
+.damage-impact-scar,
+.damage-hit-point,
+.damage-chip-slab,
+.damage-exposed-face,
+.damage-empty-rim,
+.damage-empty-cavity {
+  vector-effect: non-scaling-stroke;
+}
+
+.damage-main-crack,
+.damage-main-crack-edge,
+.damage-branch {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  mix-blend-mode: multiply;
+}
+
+.damage-main-crack {
+  stroke: oklch(0.045 0.008 34 / 0.96);
+  stroke-width: 4.2;
+  stroke-dasharray: 124;
+  stroke-dashoffset: 124;
+}
+
+.damage-main-crack-edge {
+  stroke: oklch(0.52 0.045 56 / 0.28);
+  stroke-width: 1.15;
+  stroke-dasharray: 8 7;
+  stroke-dashoffset: 124;
+  mix-blend-mode: normal;
+}
+
+.damage-branch {
+  stroke: oklch(0.07 0.012 35 / 0.88);
+  stroke-width: 2.55;
+  stroke-dasharray: 108;
+  stroke-dashoffset: 108;
+}
+
+.damage-impact-scar,
+.damage-chip-slab,
+.damage-exposed-face,
+.damage-empty-rim,
+.damage-empty-cavity {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+
+.damage-impact-scar {
+  fill: oklch(0.075 0.012 35 / 0.94);
+  stroke: oklch(0.42 0.035 48 / 0.42);
+  stroke-width: 1.1;
+  mix-blend-mode: multiply;
+}
+
+.damage-hit-point {
+  fill: oklch(0.05 0.01 34 / 0.8);
+  opacity: 0;
+  mix-blend-mode: multiply;
+}
+
+.damage-exposed-face {
+  fill: oklch(0.2 0.025 43 / 0.82);
+  stroke: oklch(0.45 0.035 54 / 0.44);
+  stroke-width: 1.35;
+  filter: drop-shadow(0 2px 0 oklch(0.01 0 0 / 0.22));
+}
+
+.block-dirt .damage-exposed-face {
+  fill: oklch(0.24 0.04 50 / 0.84);
+}
+
+.block-ore .damage-exposed-face {
+  fill: color-mix(in oklch, var(--ore-color) 24%, oklch(0.18 0.02 38 / 0.86));
+  stroke: color-mix(in oklch, var(--ore-bright) 28%, oklch(0.36 0.025 48 / 0.48));
+}
+
+.damage-chip-slab {
+  fill: oklch(0.14 0.018 38 / 0.92);
+  stroke: oklch(0.32 0.03 46 / 0.46);
+  stroke-width: 1.25;
+  mix-blend-mode: multiply;
+}
+
+.damage-empty-rim {
+  fill: oklch(0.17 0.025 42 / 0.9);
+  stroke: oklch(0.36 0.035 48 / 0.42);
+  stroke-width: 1.35;
+}
+
+.damage-empty-cavity {
+  fill: oklch(0.012 0 0 / 0.98);
+  stroke: oklch(0.12 0.015 40 / 0.8);
+  stroke-width: 1.1;
+}
+
+.stage-intact .damage-main-crack,
+.stage-intact .damage-main-crack-edge,
+.stage-intact .damage-branch,
+.stage-intact .damage-impact-scar,
+.stage-intact .damage-hit-point,
+.stage-intact .damage-chip-slab,
+.stage-intact .damage-exposed-face,
+.stage-intact .damage-empty-rim,
+.stage-intact .damage-empty-cavity {
+  opacity: 0;
+}
+
+.mining-cell.is-target .cell-damage-overlay.stage-intact .damage-impact-scar {
+  opacity: 0.24;
+}
+
+.mining-cell.is-target .cell-damage-overlay.stage-intact .damage-hit-point {
+  opacity: 0.22;
+}
+
+.stage-chipped .damage-impact-scar {
+  opacity: 0.78;
+}
+
+.stage-chipped .damage-hit-point {
+  opacity: 0.52;
+}
+
+.stage-chipped .damage-main-crack {
+  opacity: 0.7;
+  stroke-dashoffset: 82;
+}
+
+.stage-chipped .damage-main-crack-edge {
+  opacity: 0.28;
+  stroke-dashoffset: 88;
+}
+
+.stage-chipped .damage-chip-slab {
+  opacity: 0.28;
+}
+
+.stage-cracked .damage-impact-scar {
+  opacity: 0.9;
+}
+
+.stage-cracked .damage-hit-point {
+  opacity: 0.64;
+}
+
+.stage-cracked .damage-main-crack {
+  opacity: 0.92;
+  stroke-dashoffset: 44;
+}
+
+.stage-cracked .damage-main-crack-edge {
+  opacity: 0.38;
+  stroke-dashoffset: 54;
+}
+
+.stage-cracked .damage-branch-a,
+.stage-cracked .damage-branch-b {
+  opacity: 0.72;
+  stroke-dashoffset: 62;
+}
+
+.stage-cracked .damage-chip-slab {
+  opacity: 0.42;
+}
+
+.stage-exposed .damage-impact-scar {
+  opacity: 1;
+}
+
+.stage-exposed .damage-hit-point {
+  opacity: 0.72;
+}
+
+.stage-exposed .damage-main-crack,
+.stage-exposed .damage-main-crack-edge {
+  opacity: 1;
+  stroke-dashoffset: 18;
+}
+
+.stage-exposed .damage-branch {
+  opacity: 0.82;
+  stroke-dashoffset: 36;
+}
+
+.stage-exposed .damage-exposed-face {
+  opacity: 0.76;
+}
+
+.stage-exposed .damage-chip-slab {
+  opacity: 0.62;
+}
+
+.stage-crumbling .damage-impact-scar {
+  opacity: 1;
+}
+
+.stage-crumbling .damage-hit-point {
+  opacity: 0.76;
+}
+
+.stage-crumbling .damage-main-crack,
+.stage-crumbling .damage-main-crack-edge,
+.stage-crumbling .damage-branch {
+  opacity: 1;
+  stroke-dashoffset: 0;
+}
+
+.stage-crumbling .damage-exposed-face {
+  opacity: 0.94;
+}
+
+.stage-crumbling .damage-chip-slab {
+  opacity: 0.86;
+}
+
+.stage-empty .damage-empty-rim,
+.stage-empty .damage-empty-cavity {
+  opacity: 1;
+}
+
+.stage-empty .damage-main-crack,
+.stage-empty .damage-branch {
+  opacity: 0.16;
+  stroke-dashoffset: 0;
+}
+
+.stage-empty .damage-chip-slab {
+  opacity: 0.58;
+}
+
+.stage-empty .damage-impact-scar,
+.stage-empty .damage-hit-point,
+.stage-empty .damage-exposed-face,
+.stage-empty .damage-main-crack-edge {
+  opacity: 0;
+}
+
+.mining-cell[data-cell-index="0"] .cell-damage-overlay { transform: rotate(-8deg) translate(-1px, -1px); }
+.mining-cell[data-cell-index="1"] .cell-damage-overlay { transform: translateY(-2px) rotate(4deg); }
+.mining-cell[data-cell-index="2"] .cell-damage-overlay { transform: rotate(8deg) scaleX(-1); }
+.mining-cell[data-cell-index="3"] .cell-damage-overlay { transform: translateX(-2px) rotate(-3deg); }
+.mining-cell[data-cell-index="5"] .cell-damage-overlay { transform: translateX(2px) rotate(5deg); }
+.mining-cell[data-cell-index="6"] .cell-damage-overlay { transform: rotate(10deg); }
+.mining-cell[data-cell-index="7"] .cell-damage-overlay { transform: translateY(2px) rotate(-5deg); }
+.mining-cell[data-cell-index="8"] .cell-damage-overlay { transform: rotate(-9deg) scaleX(-1); }
