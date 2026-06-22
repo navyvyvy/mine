@@ -1,13 +1,19 @@
 import { blockResource, getCellDamageVisualStage, isOreBlock } from '../../game/face';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { Flyout, MiningCell, MiningFace as MiningFaceData, PickaxeStrikeState, SettingsState, TuningState } from '../../game/types';
+import type { MiningCell, MiningFace as MiningFaceData, PickaxeStrikeState, SettingsState, TuningState } from '../../game/types';
 import { getMiningCellTargetPoint } from '../../game/targeting';
 import { resourceName, t } from '../../i18n';
-import { ResourceIcon } from '../ResourceIcon';
 import { CellDamageOverlay } from './CellDamageOverlay';
 import { MiningFaceWallOverlay } from './MiningFaceWallOverlay';
 import { PickaxeLayer } from './PickaxeLayer';
+
+type Bounds = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
 
 type Props = {
   face: MiningFaceData;
@@ -18,10 +24,11 @@ type Props = {
   autoEnabled: boolean;
   manualMiningEnabled: boolean;
   debugOpen: boolean;
-  flyouts: Flyout[];
   nowMs: number;
   lanternRevealActive: boolean;
+  faceClearActive: boolean;
   faceTransitionActive: boolean;
+  onGeometryChange?: (geometry: { stageRect: Bounds; gridRect: Bounds }) => void;
   onManualStrike: (cellIndex: number) => void;
 };
 
@@ -74,8 +81,8 @@ function MiningCellView({
     >
       <div className="cell-material" />
       {isOreBlock(cell.blockType) && <span className={`embedded-ore ore-stage-${stage.toLowerCase()}`} aria-hidden="true" />}
-      <CellDamageOverlay cell={cell} />
-      {dust && <span className="dust-burst" />}
+      <CellDamageOverlay key={`${cell.index}-${cell.hitFlashUntilMs}-${cell.dustUntilMs}`} cell={cell} />
+      {dust && <span key={`${cell.index}-${cell.dustUntilMs}`} className="dust-burst" />}
       {debugOpen && (
         <>
           <span className="debug-cell-id">{cell.index}</span>
@@ -100,10 +107,11 @@ export function MiningFace({
   autoEnabled,
   manualMiningEnabled,
   debugOpen,
-  flyouts,
   nowMs,
   lanternRevealActive,
+  faceClearActive,
   faceTransitionActive,
+  onGeometryChange,
   onManualStrike
 }: Props) {
   const mainResource = face.cells.find((cell) => isOreBlock(cell.blockType))?.resource ?? 'STONE';
@@ -111,6 +119,7 @@ export function MiningFace({
   const fallbackTargetPoint = useMemo(() => getMiningCellTargetPoint(activeTargetIndex), [activeTargetIndex]);
   const stageRef = useRef<HTMLElement | null>(null);
   const faceGridRef = useRef<HTMLDivElement | null>(null);
+  const lastGeometryRef = useRef<{ stageLeft: number; stageTop: number; stageWidth: number; stageHeight: number; gridLeft: number; gridTop: number; gridWidth: number; gridHeight: number } | null>(null);
   const [faceGeometry, setFaceGeometry] = useState<FaceGeometry>({
     targetPoint: fallbackTargetPoint,
     centerXPercent: 50,
@@ -137,14 +146,53 @@ export function MiningFace({
       const targetY = gridRect.top - stageRect.top + (row + 0.5) * cellHeight;
       const centerX = gridRect.left - stageRect.left + gridRect.width / 2;
       const centerY = gridRect.top - stageRect.top + gridRect.height / 2;
-      setFaceGeometry({
-        targetPoint: {
-          ...fallbackTargetPoint,
-          xPercent: (targetX / stageRect.width) * 100,
-          yPercent: (targetY / stageRect.height) * 100
-        },
-        centerXPercent: (centerX / stageRect.width) * 100,
-        centerYPercent: (centerY / stageRect.height) * 100
+      const nextGeometry = {
+        stageLeft: stageRect.left,
+        stageTop: stageRect.top,
+        stageWidth: stageRect.width,
+        stageHeight: stageRect.height,
+        gridLeft: gridRect.left,
+        gridTop: gridRect.top,
+        gridWidth: gridRect.width,
+        gridHeight: gridRect.height
+      };
+      setFaceGeometry((current) => {
+        const nextFaceGeometry = {
+          targetPoint: {
+            ...fallbackTargetPoint,
+            xPercent: (targetX / stageRect.width) * 100,
+            yPercent: (targetY / stageRect.height) * 100
+          },
+          centerXPercent: (centerX / stageRect.width) * 100,
+          centerYPercent: (centerY / stageRect.height) * 100
+        };
+        if (
+          current.targetPoint.xPercent === nextFaceGeometry.targetPoint.xPercent &&
+          current.targetPoint.yPercent === nextFaceGeometry.targetPoint.yPercent &&
+          current.centerXPercent === nextFaceGeometry.centerXPercent &&
+          current.centerYPercent === nextFaceGeometry.centerYPercent
+        ) {
+          return current;
+        }
+        return nextFaceGeometry;
+      });
+      if (
+        lastGeometryRef.current &&
+        lastGeometryRef.current.stageLeft === nextGeometry.stageLeft &&
+        lastGeometryRef.current.stageTop === nextGeometry.stageTop &&
+        lastGeometryRef.current.stageWidth === nextGeometry.stageWidth &&
+        lastGeometryRef.current.stageHeight === nextGeometry.stageHeight &&
+        lastGeometryRef.current.gridLeft === nextGeometry.gridLeft &&
+        lastGeometryRef.current.gridTop === nextGeometry.gridTop &&
+        lastGeometryRef.current.gridWidth === nextGeometry.gridWidth &&
+        lastGeometryRef.current.gridHeight === nextGeometry.gridHeight
+      ) {
+        return;
+      }
+      lastGeometryRef.current = nextGeometry;
+      onGeometryChange?.({
+        stageRect: { left: stageRect.left, top: stageRect.top, width: stageRect.width, height: stageRect.height },
+        gridRect: { left: gridRect.left, top: gridRect.top, width: gridRect.width, height: gridRect.height }
       });
     };
 
@@ -159,12 +207,12 @@ export function MiningFace({
       resizeObserver?.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [activeTargetIndex, face.id, fallbackTargetPoint]);
+  }, [activeTargetIndex, face.id, fallbackTargetPoint, onGeometryChange]);
 
   return (
     <section
       ref={stageRef}
-      className={`mining-stage ${strike ? 'has-strike' : ''} ${lanternRevealActive ? 'lantern-reveal-active' : ''} ${faceTransitionActive ? 'face-transition-active' : ''}`}
+      className={`mining-stage ${strike ? 'has-strike' : ''} ${lanternRevealActive ? 'lantern-reveal-active' : ''} ${faceClearActive ? 'face-clear-active' : ''} ${faceTransitionActive ? 'face-transition-active' : ''}`}
       style={{
         '--impact-shake': `${tuning.animation.pickaxeImpactShake}px`,
         '--face-center-x': `${faceGeometry.centerXPercent}%`,
@@ -173,6 +221,7 @@ export function MiningFace({
       aria-label={t(settings.language, 'aria.miningFace')}
     >
       <div className="mining-depth-shadow" />
+      {faceClearActive && <div className="face-clear-burst" aria-hidden="true" />}
       <div ref={faceGridRef} className="mining-face-grid">
         {face.cells.map((cell) => (
           <MiningCellView
@@ -190,12 +239,6 @@ export function MiningFace({
         <MiningFaceWallOverlay pattern={face.pattern} mainResource={mainResource} />
         <div className="lantern-light" />
       </div>
-      {flyouts.map((flyout) => (
-        <span key={flyout.id} className={`resource-flyout flyout-cell-${flyout.cellIndex}`}>
-          +{flyout.amount}
-          <ResourceIcon resource={flyout.resource} size="tiny" />
-        </span>
-      ))}
       <div className="first-person-equipment" aria-label={t(settings.language, 'aria.heldEquipment')}>
         <div className="held-equipment held-lantern-button" aria-hidden="true">
           <span className="lantern-object" aria-hidden="true">

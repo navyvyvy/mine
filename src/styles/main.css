@@ -217,6 +217,19 @@ h3 {
   z-index: 0;
 }
 
+.face-clear-burst {
+  position: absolute;
+  inset: 0;
+  z-index: 13;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 54%, oklch(0.86 0.09 78 / 0.24), transparent 18%),
+    radial-gradient(circle at 50% 54%, oklch(0.58 0.05 36 / 0.16), transparent 38%),
+    radial-gradient(circle at 50% 54%, transparent 0 58%, oklch(0.02 0 0 / 0.22) 88%);
+  mix-blend-mode: screen;
+  animation: face-clear-burst 360ms ease-out forwards;
+}
+
 .dust-burst {
   position: absolute;
   left: 50%;
@@ -229,6 +242,114 @@ h3 {
   animation: dust-burst 460ms ease-out forwards;
   z-index: 7;
   pointer-events: none;
+}
+
+.resource-acquisition-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.resource-acquisition {
+  --acq-main: oklch(0.78 0.13 78);
+  --acq-edge: oklch(0.94 0.05 86);
+  --acq-shadow: oklch(0.12 0.02 34);
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  margin-left: 0;
+  margin-top: 0;
+  transform: translate(-50%, -50%);
+  animation: resource-acquire-flight var(--acquisition-duration) cubic-bezier(0.18, 0.76, 0.12, 1) forwards;
+  filter: drop-shadow(0 0 8px color-mix(in oklch, var(--acq-main) 54%, transparent));
+  will-change: transform, opacity;
+}
+
+.resource-acquisition-core {
+  position: absolute;
+  inset: 10px;
+  border-radius: 12px 14px 10px 14px;
+  background:
+    linear-gradient(145deg, color-mix(in oklch, var(--acq-edge) 84%, white) 0%, var(--acq-main) 48%, var(--acq-shadow) 100%);
+  border: 1px solid color-mix(in oklch, var(--acq-edge) 50%, var(--acq-main));
+  box-shadow:
+    0 0 0 1px oklch(0.02 0 0 / 0.32) inset,
+    0 0 10px color-mix(in oklch, var(--acq-main) 42%, transparent);
+  animation: resource-acquire-core-pop var(--acquisition-duration) ease-out forwards;
+  transform-origin: center;
+}
+
+.resource-acquisition-shard {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 12px;
+  border-radius: 2px 4px 3px 2px;
+  background:
+    linear-gradient(180deg, color-mix(in oklch, var(--acq-edge) 72%, white) 0%, var(--acq-main) 100%);
+  box-shadow: 0 0 8px color-mix(in oklch, var(--acq-main) 35%, transparent);
+  transform: translate(-50%, -50%) translate(var(--spark-x), var(--spark-y)) rotate(var(--spark-rotate)) scale(var(--spark-scale));
+  animation: resource-acquire-shard-burst var(--acquisition-duration) ease-out forwards;
+  animation-delay: var(--spark-delay);
+  opacity: 0.96;
+}
+
+.resource-acquisition-value {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  transform: translate(-50%, 0);
+  color: color-mix(in oklch, var(--acq-edge) 70%, white);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-shadow: 0 0 8px color-mix(in oklch, var(--acq-main) 34%, transparent);
+  animation: resource-acquire-value var(--acquisition-duration) ease-out forwards;
+  white-space: nowrap;
+}
+
+.resource-acquisition.resource-stone {
+  --acq-main: oklch(0.74 0.02 72);
+  --acq-edge: oklch(0.92 0.02 72);
+  --acq-shadow: oklch(0.18 0.012 42);
+}
+
+.resource-acquisition.resource-coal {
+  --acq-main: oklch(0.26 0.01 72);
+  --acq-edge: oklch(0.7 0.03 286);
+  --acq-shadow: oklch(0.08 0.012 34);
+}
+
+.resource-acquisition.resource-copper {
+  --acq-main: oklch(0.68 0.14 53);
+  --acq-edge: oklch(0.88 0.08 82);
+  --acq-shadow: oklch(0.22 0.04 34);
+}
+
+.resource-acquisition.resource-iron {
+  --acq-main: oklch(0.46 0.08 28);
+  --acq-edge: oklch(0.84 0.04 64);
+  --acq-shadow: oklch(0.16 0.03 34);
+}
+
+.resource-acquisition.resource-gold {
+  --acq-main: oklch(0.82 0.14 84);
+  --acq-edge: oklch(0.96 0.07 96);
+  --acq-shadow: oklch(0.38 0.06 72);
+}
+
+.resource-acquisition.resource-crystal {
+  --acq-main: oklch(0.66 0.14 248);
+  --acq-edge: oklch(0.94 0.06 286);
+  --acq-shadow: oklch(0.22 0.04 268);
+}
+
+.resource-acquisition.resource-diamond {
+  --acq-main: oklch(0.82 0.09 226);
+  --acq-edge: oklch(0.98 0.03 248);
+  --acq-shadow: oklch(0.3 0.03 226);
 }
 
 .resource-flyout {
@@ -282,7 +403,7 @@ h3 {
 }
 
 .pickaxe-layer.phase-impact {
-  transform: translate(calc(58px + var(--target-x)), calc(44px + var(--target-y))) rotate(-8deg) scale(1.04);
+  transform: translate(calc(58px + var(--target-x)), calc(44px + var(--target-y))) rotate(-8deg);
 }
 
 .pickaxe-layer.phase-recover {
@@ -652,6 +773,20 @@ h3 {
   }
 }
 
+@keyframes face-clear-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  25% {
+    opacity: 0.82;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
 @keyframes resource-fly {
   from {
     opacity: 1;
@@ -660,6 +795,85 @@ h3 {
   to {
     opacity: 0;
     transform: translate(-50%, -84px);
+  }
+}
+
+@keyframes resource-acquire-flight {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
+  16% {
+    opacity: 1;
+  }
+  46% {
+    transform:
+      translate(calc(-50% + (var(--acquisition-dx) * 0.42)), calc(-50% + (var(--acquisition-dy) * 0.42) - 14px))
+      scale(1.04);
+  }
+  74% {
+    transform:
+      translate(calc(-50% + (var(--acquisition-dx) * 0.82)), calc(-50% + (var(--acquisition-dy) * 0.82) - 6px))
+      scale(0.92);
+    opacity: 1;
+  }
+  100% {
+    transform:
+      translate(calc(-50% + var(--acquisition-dx)), calc(-50% + var(--acquisition-dy)))
+      scale(0.68);
+    opacity: 0;
+  }
+}
+
+@keyframes resource-acquire-core-pop {
+  0% {
+    transform: scale(0.7) rotate(-8deg);
+  }
+  52% {
+    transform: scale(1.12) rotate(8deg);
+  }
+  100% {
+    transform: scale(0.84) rotate(2deg);
+  }
+}
+
+@keyframes resource-acquire-shard-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(var(--spark-x), var(--spark-y)) rotate(var(--spark-rotate)) scale(0.45);
+  }
+  28% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(calc(var(--spark-x) * 1.14), calc(var(--spark-y) * 1.14)) rotate(calc(var(--spark-rotate) + 18deg)) scale(1.06);
+  }
+}
+
+@keyframes resource-acquire-value {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.8);
+  }
+  26% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -6px) scale(1.04);
+  }
+}
+
+@keyframes hud-resource-pop {
+  0% {
+    transform: scale(1);
+  }
+  32% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
@@ -3017,13 +3231,13 @@ h3 {
 .pickaxe-layer.phase-impact .pickaxe-rig {
   opacity: 1;
   transform: translate(0, 0) rotate(0deg);
-  transition-duration: 40ms;
+  transition-duration: 88ms;
 }
 
 .pickaxe-layer.phase-recover .pickaxe-rig {
   opacity: 1;
   transform: translate(var(--pickaxe-ready-x), var(--pickaxe-ready-y)) rotate(-18deg);
-  transition-duration: 96ms;
+  transition-duration: 168ms;
 }
 
 .swing-cuff {
@@ -3308,6 +3522,26 @@ h3 {
 .resource-flyout .material-icon.is-tiny {
   width: 13px;
   height: 13px;
+}
+
+.resource-strip .hud-resource {
+  position: relative;
+}
+
+.hud-resource-body {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transform-origin: center;
+  will-change: transform, filter;
+}
+
+.hud-resource.is-acquiring {
+  color: oklch(0.98 0.02 88);
+}
+
+.hud-resource.is-acquiring .hud-resource-body {
+  animation: hud-resource-pop 620ms cubic-bezier(0.16, 0.84, 0.24, 1) both;
 }
 
 .pickaxe-assembly {

@@ -6,6 +6,7 @@ import {
   clamp,
   createEmptyResources,
   random01,
+  RESOURCE_IDS,
   RESOURCE_PRIORITY,
   subtractResourceMaps
 } from './constants';
@@ -29,6 +30,7 @@ import type {
   ActiveRewardEffect,
   GameLog,
   GameState,
+  Flyout,
   MiningCell,
   MiningFace,
   OfflineSummary,
@@ -94,6 +96,9 @@ const TOAST_RESOURCE_LABELS: Record<ResourceId, { ko: string; en: string }> = {
   DIAMOND: { ko: '다이아', en: 'Diamond' }
 };
 
+const FACE_CLEAR_REVEAL_MS = 360;
+const REWARD_OPEN_DELAY_MS = 420;
+
 function addToast(state: GameState, toast: Omit<ToastMessage, 'id' | 'createdAtMs'>): GameState {
   const entry: ToastMessage = {
     ...toast,
@@ -116,6 +121,24 @@ function resourceToast(resource: ResourceId, amount: number): Omit<ToastMessage,
   };
 }
 
+function createResourceFlyouts(state: GameState, delta: ResourceAmountMap, cellIndex: number): Flyout[] {
+  let nextId = state.totalHits + state.flyouts.length + 1;
+  const createdAtMs = state.nowMs;
+  return RESOURCE_IDS.flatMap((resource) => {
+    const amount = Math.max(0, Math.floor(delta[resource] ?? 0));
+    if (amount <= 0) return [];
+    const flyout: Flyout = {
+      id: nextId,
+      cellIndex,
+      resource,
+      amount,
+      createdAtMs
+    };
+    nextId += 1;
+    return [flyout];
+  });
+}
+
 function defaultSettings(): SettingsState {
   return {
     language: 'ko',
@@ -127,12 +150,12 @@ function defaultSettings(): SettingsState {
   };
 }
 
-function createRewardEncounter(state: GameState, depth: number): RewardEncounter {
+function createRewardEncounter(state: GameState, depth: number, openedAtMs = state.nowMs): RewardEncounter {
   const id = state.clearedFaceCount + depth + 1;
   return {
     id,
     openedAtDepth: depth,
-    openedAtMs: state.nowMs,
+    openedAtMs,
     choices: generateRewardChoices(id, depth, state.tuning, state.passives),
     selectedId: null
   };
@@ -157,16 +180,21 @@ function computeHitIntervalMs(state: GameState): number {
   return Math.max(state.tuning.mining.minimumHitIntervalMs, Math.round(state.tuning.mining.baseHitIntervalMs * (1 - reduction)));
 }
 
+function computeImpactHoldMs(durationMs: number, tuning: TuningState): number {
+  const scaledHoldMs = Math.round(durationMs * tuning.animation.pickaxeImpactDurationRatio);
+  return clamp(scaledHoldMs, 90, 130);
+}
+
 function updateStrikePhase(strike: PickaxeStrikeState, nowMs: number, tuning: TuningState): PickaxeStrikeState {
   const duration = Math.max(1, strike.endsAtMs - strike.startedAtMs);
-  const elapsedRatio = clamp((nowMs - strike.startedAtMs) / duration, 0, 1);
-  const aimEnd = tuning.animation.pickaxeAimDurationRatio;
-  const windEnd = aimEnd + tuning.animation.pickaxeWindUpDurationRatio;
-  const impactEnd = windEnd + tuning.animation.pickaxeImpactDurationRatio;
+  const elapsedMs = Math.max(0, nowMs - strike.startedAtMs);
+  const aimEndMs = duration * tuning.animation.pickaxeAimDurationRatio;
+  const windEndMs = aimEndMs + duration * tuning.animation.pickaxeWindUpDurationRatio;
+  const impactEndMs = windEndMs + computeImpactHoldMs(duration, tuning);
   let phase: PickaxeStrikePhase = 'RECOVER';
-  if (elapsedRatio < aimEnd) phase = 'AIM_TO_TARGET';
-  else if (elapsedRatio < windEnd) phase = 'WIND_UP';
-  else if (elapsedRatio < impactEnd) phase = 'IMPACT';
+  if (elapsedMs < aimEndMs) phase = 'AIM_TO_TARGET';
+  else if (elapsedMs < windEndMs) phase = 'WIND_UP';
+  else if (elapsedMs < impactEndMs) phase = 'IMPACT';
   return { ...strike, phase };
 }
 
@@ -346,10 +374,7 @@ function grantResourceForCell(state: GameState, cell: MiningCell): GameState {
     resources: addResourceMaps(state.resources, delta),
     lifetimeMinedResources: addResourceMaps(state.lifetimeMinedResources, delta),
     bonusGainedResources: addResourceMaps(state.bonusGainedResources, bonusDelta),
-    flyouts: [
-      { id: state.totalHits + state.flyouts.length + 1, cellIndex: cell.index, resource: cell.resource, amount, createdAtMs: state.nowMs },
-      ...state.flyouts
-    ].slice(0, 16),
+    flyouts: [...createResourceFlyouts(state, delta, cell.index), ...state.flyouts].slice(0, 16),
     firstMinute: {
       ...state.firstMinute,
       firstBlockBrokenAtMs: state.firstMinute.firstBlockBrokenAtMs ?? state.nowMs
@@ -397,7 +422,8 @@ function applyFaceClearRewardEffects(state: GameState): GameState {
     ...state,
     resources: addResourceMaps(state.resources, delta),
     lifetimeMinedResources: addResourceMaps(state.lifetimeMinedResources, delta),
-    bonusGainedResources: addResourceMaps(state.bonusGainedResources, delta)
+    bonusGainedResources: addResourceMaps(state.bonusGainedResources, delta),
+    flyouts: [...createResourceFlyouts(state, delta, 4), ...state.flyouts].slice(0, 16)
   };
 }
 
@@ -422,9 +448,9 @@ function applyImpact(state: GameState, targetCellIndex: number): GameState {
     next = grantResourceForCell(next, updatedCell);
   }
   if (isFaceCleared(next.currentFace)) {
-    next = advanceAfterFaceClear(next);
+    return { ...next, faceClearRevealUntilMs: state.nowMs + FACE_CLEAR_REVEAL_MS };
   }
-  return next;
+  return { ...next, faceClearRevealUntilMs: 0 };
 }
 
 function shouldOpenReward(state: GameState, facesSinceLastEncounter: number, newDepth: number): boolean {
@@ -455,6 +481,7 @@ function advanceAfterFaceClear(state: GameState): GameState {
     strike: null,
     targetCellIndex: null,
     targetScores: {},
+    faceClearRevealUntilMs: 0,
     faceTransitionUntilMs: rewardedState.nowMs + transitionMs,
     saveRevision: rewardedState.saveRevision + 1,
     lastSaveReason: 'face-clear',
@@ -490,16 +517,17 @@ function advanceAfterFaceClear(state: GameState): GameState {
 
   const nextFace = generateMiningFace(newDepth, rewardedState.currentFace.id + 1, rewardedState.tuning, rewardedState.passives);
   if (shouldOpenReward(rewardedState, facesSinceLastEncounter, newDepth)) {
+    const queuedEncounter = createRewardEncounter(base, newDepth, rewardedState.nowMs + transitionMs + REWARD_OPEN_DELAY_MS);
     const withReward: GameState = {
       ...base,
       currentFace: nextFace,
-      activeOverlay: 'REWARD_ENCOUNTER',
-      rewardEncounter: createRewardEncounter(base, newDepth),
+      activeOverlay: 'NONE',
+      rewardEncounter: queuedEncounter,
       facesSinceLastEncounter: 0,
       saveRevision: base.saveRevision + 1,
       lastSaveReason: 'reward-opened'
     };
-    return log(withReward, 'reward', 'Reward Encounter opened.');
+    return log(withReward, 'reward', 'Reward Encounter queued.');
   }
 
   return log({ ...base, currentFace: nextFace }, 'mining', `Advanced to ${newDepth}m.`);
@@ -531,7 +559,8 @@ function applyRewardSelection(state: GameState, choice: RewardChoice): GameState
     next = {
       ...next,
       resources: addResourceMaps(next.resources, delta),
-      rewardGainedResources: addResourceMaps(next.rewardGainedResources, delta)
+      rewardGainedResources: addResourceMaps(next.rewardGainedResources, delta),
+      flyouts: [...createResourceFlyouts(next, delta, 4), ...next.flyouts].slice(0, 16)
     };
   }
 
@@ -692,6 +721,7 @@ export function createFreshGameState(nowMs = Date.now()): GameState {
     rewardEncounter: null,
     lanternRevealUntilMs: nowMs + tuning.animation.lanternRevealDurationMs,
     faceTransitionUntilMs: 0,
+    faceClearRevealUntilMs: 0,
     miningCore: {
       activeNodeIds,
       selectedNodeId: 0,
@@ -764,8 +794,12 @@ export function createGameStateFromSave(save: SaveData | null, nowMs = Date.now(
     clearedFaceCount: save.clearedFaceCount,
     facesSinceLastEncounter: save.facesSinceLastEncounter,
     autoEnabled: save.autoEnabled,
-    activeOverlay: save.pendingRewardEncounter ? 'REWARD_ENCOUNTER' : 'NONE',
-    rewardEncounter: save.pendingRewardEncounter,
+    activeOverlay:
+      save.pendingRewardEncounter && save.pendingRewardEncounter.selectedId === null && save.pendingRewardEncounter.openedAtMs <= nowMs
+        ? 'REWARD_ENCOUNTER'
+        : 'NONE',
+    rewardEncounter:
+      save.pendingRewardEncounter && save.pendingRewardEncounter.selectedId === null ? save.pendingRewardEncounter : null,
     activeRewards: save.activeRewards,
     miningCore: {
       activeNodeIds,
@@ -841,8 +875,21 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           state.totalRewardChoiceSeconds + (state.activeOverlay === 'REWARD_ENCOUNTER' ? Math.max(0, (action.nowMs - state.nowMs) / 1000) : 0)
       };
       if (
+        next.activeOverlay === 'NONE' &&
+        next.rewardEncounter &&
+        next.rewardEncounter.selectedId === null &&
+        action.nowMs >= next.rewardEncounter.openedAtMs
+      ) {
+        next = {
+          ...next,
+          activeOverlay: 'REWARD_ENCOUNTER',
+          rewardEncounter: { ...next.rewardEncounter, openedAtMs: action.nowMs }
+        };
+      }
+      if (
         next.activeOverlay === 'REWARD_ENCOUNTER' &&
         next.rewardEncounter &&
+        next.rewardEncounter.selectedId === null &&
         next.tuning.rewards.rewardAutoPickEnabled &&
         action.nowMs - next.rewardEncounter.openedAtMs >= next.tuning.rewards.rewardChoiceTimeoutMs
       ) {
@@ -852,6 +899,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         !next.autoEnabled ||
         next.miningPaused ||
         next.activeOverlay !== 'NONE' ||
+        (next.rewardEncounter !== null && next.rewardEncounter.selectedId === null && action.nowMs < next.rewardEncounter.openedAtMs) ||
         next.activePanel !== 'NONE' ||
         action.nowMs < next.faceTransitionUntilMs ||
         action.nowMs < next.lanternRevealUntilMs;
@@ -864,7 +912,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         if (next.strike && action.nowMs >= next.strike.endsAtMs) {
           next = { ...next, strike: null };
         }
-        return next;
+        if (next.strike) {
+          return next;
+        }
+      }
+      if (isFaceCleared(next.currentFace)) {
+        if (next.faceClearRevealUntilMs > 0 && action.nowMs < next.faceClearRevealUntilMs) {
+          return next;
+        }
+        return advanceAfterFaceClear({ ...next, faceClearRevealUntilMs: 0 });
       }
       if (blocked) return next;
       const { cellIndex, scores } = selectTarget(next);
@@ -978,7 +1034,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         activeOverlay: 'REWARD_ENCOUNTER',
-        rewardEncounter: createRewardEncounter(state, state.depth),
+        rewardEncounter: createRewardEncounter(state, state.depth, state.nowMs),
         saveRevision: state.saveRevision + 1,
         lastSaveReason: 'debug-open-reward'
       };

@@ -21,13 +21,22 @@ type LayerDefinition = {
 };
 
 const LAYERS: LayerDefinition[] = [
-  { name: 'Dirt Layer', minDepth: 0, baseBlock: 'DIRT_BLOCK', orePool: ['STONE', 'COAL'], rarePool: ['COAL'] },
-  { name: 'Stone Layer', minDepth: 10, baseBlock: 'STONE_BLOCK', orePool: ['STONE', 'COAL', 'COPPER'], rarePool: ['COPPER'] },
-  { name: 'Coal Vein', minDepth: 60, baseBlock: 'STONE_BLOCK', orePool: ['COAL', 'COPPER', 'IRON'], rarePool: ['IRON'] },
-  { name: 'Iron Depth', minDepth: 180, baseBlock: 'STONE_BLOCK', orePool: ['COPPER', 'IRON', 'GOLD'], rarePool: ['GOLD'] },
-  { name: 'Crystal Cave', minDepth: 650, baseBlock: 'STONE_BLOCK', orePool: ['IRON', 'GOLD', 'CRYSTAL'], rarePool: ['CRYSTAL'] },
-  { name: 'Diamond Depth', minDepth: 1600, baseBlock: 'STONE_BLOCK', orePool: ['GOLD', 'CRYSTAL', 'DIAMOND'], rarePool: ['DIAMOND'] }
+  { name: 'Dirt Layer', minDepth: 0, baseBlock: 'DIRT_BLOCK', orePool: ['COAL'], rarePool: ['COAL'] },
+  { name: 'Stone Layer', minDepth: 50, baseBlock: 'STONE_BLOCK', orePool: ['COAL', 'COPPER'], rarePool: ['COPPER'] },
+  { name: 'Coal Vein', minDepth: 200, baseBlock: 'STONE_BLOCK', orePool: ['COAL', 'COPPER', 'IRON'], rarePool: ['IRON'] },
+  { name: 'Iron Depth', minDepth: 450, baseBlock: 'STONE_BLOCK', orePool: ['COAL', 'COPPER', 'IRON', 'GOLD'], rarePool: ['GOLD'] },
+  { name: 'Crystal Cave', minDepth: 900, baseBlock: 'STONE_BLOCK', orePool: ['COAL', 'COPPER', 'IRON', 'GOLD', 'CRYSTAL'], rarePool: ['CRYSTAL'] },
+  { name: 'Diamond Depth', minDepth: 1500, baseBlock: 'STONE_BLOCK', orePool: ['COAL', 'COPPER', 'IRON', 'GOLD', 'CRYSTAL', 'DIAMOND'], rarePool: ['DIAMOND'] }
 ];
+
+const BASE_BLOCK_WEIGHTS: Record<string, Partial<Record<BlockType, number>>> = {
+  'Dirt Layer': { DIRT_BLOCK: 80, STONE_BLOCK: 20 },
+  'Stone Layer': { STONE_BLOCK: 100 },
+  'Coal Vein': { STONE_BLOCK: 100 },
+  'Iron Depth': { STONE_BLOCK: 100 },
+  'Crystal Cave': { STONE_BLOCK: 100 },
+  'Diamond Depth': { STONE_BLOCK: 100 }
+};
 
 const ORE_BLOCK_BY_RESOURCE: Record<ResourceId, BlockType> = {
   STONE: 'STONE_BLOCK',
@@ -43,9 +52,18 @@ const LAYER_ORE_WEIGHTS: Record<string, Partial<Record<ResourceId, number>>> = {
   'Dirt Layer': { COAL: 100 },
   'Stone Layer': { COAL: 75, COPPER: 25 },
   'Coal Vein': { COAL: 55, COPPER: 30, IRON: 15 },
-  'Iron Depth': { COPPER: 40, IRON: 45, GOLD: 15 },
-  'Crystal Cave': { IRON: 40, GOLD: 35, CRYSTAL: 25 },
-  'Diamond Depth': { GOLD: 35, CRYSTAL: 40, DIAMOND: 25 }
+  'Iron Depth': { COAL: 20, COPPER: 25, IRON: 40, GOLD: 15 },
+  'Crystal Cave': { COAL: 12, COPPER: 18, IRON: 30, GOLD: 25, CRYSTAL: 15 },
+  'Diamond Depth': { COAL: 8, COPPER: 12, IRON: 20, GOLD: 25, CRYSTAL: 25, DIAMOND: 10 }
+};
+
+const FACE_TYPE_WEIGHTS: Record<string, Record<Exclude<FaceType, 'DIAMOND_CORE'>, number>> = {
+  'Dirt Layer': { STANDARD: 50, ORE_SPOT: 40, VEIN: 10, RICH: 0, RARE: 0 },
+  'Stone Layer': { STANDARD: 35, ORE_SPOT: 40, VEIN: 20, RICH: 5, RARE: 0 },
+  'Coal Vein': { STANDARD: 22, ORE_SPOT: 30, VEIN: 32, RICH: 16, RARE: 0 },
+  'Iron Depth': { STANDARD: 18, ORE_SPOT: 25, VEIN: 30, RICH: 26, RARE: 1 },
+  'Crystal Cave': { STANDARD: 12, ORE_SPOT: 20, VEIN: 30, RICH: 35, RARE: 3 },
+  'Diamond Depth': { STANDARD: 8, ORE_SPOT: 18, VEIN: 28, RICH: 38, RARE: 8 }
 };
 
 const PATTERN_CELLS: Record<Exclude<FacePattern, 'SCATTER' | 'CORE_RADIAL'>, number[]> = {
@@ -62,6 +80,12 @@ const PATTERN_CELLS: Record<Exclude<FacePattern, 'SCATTER' | 'CORE_RADIAL'>, num
 
 export function getLayer(depth: number): LayerDefinition {
   return [...LAYERS].reverse().find((layer) => depth >= layer.minDepth) ?? LAYERS[0];
+}
+
+function chooseBaseBlock(layer: LayerDefinition, seed: number): BlockType {
+  const weights = BASE_BLOCK_WEIGHTS[layer.name];
+  if (!weights) return layer.baseBlock;
+  return pickWeighted<BlockType>(weights as Record<BlockType, number>, seed);
 }
 
 export function blockResource(blockType: BlockType): ResourceId {
@@ -99,13 +123,15 @@ export function getCellDamageVisualStage(currentHits: number, requiredHits: numb
 
 function chooseFaceType(depth: number, seed: number, tuning: TuningState, passives: PassiveEffects): FaceType {
   if (depth >= tuning.runtime.chapterClearDepthM) return 'DIAMOND_CORE';
+  const layer = getLayer(depth);
+  const weights = FACE_TYPE_WEIGHTS[layer.name] ?? FACE_TYPE_WEIGHTS['Stone Layer'];
   return pickWeighted<Exclude<FaceType, 'DIAMOND_CORE'>>(
     {
-      STANDARD: tuning.generation.baseStandardWeight,
-      ORE_SPOT: tuning.generation.baseOreSpotWeight + passives.lanternOreSpotWeight,
-      VEIN: tuning.generation.baseVeinWeight + passives.lanternVeinWeight,
-      RICH: tuning.generation.baseRichWeight + passives.lanternRichWeight,
-      RARE: tuning.generation.baseRareWeight + passives.lanternRareWeight + passives.lanternDiamondWeight
+      STANDARD: weights.STANDARD,
+      ORE_SPOT: weights.ORE_SPOT + passives.lanternOreSpotWeight,
+      VEIN: weights.VEIN + passives.lanternVeinWeight,
+      RICH: weights.RICH + passives.lanternRichWeight,
+      RARE: weights.RARE + passives.lanternRareWeight + passives.lanternDiamondWeight
     },
     seed
   );
@@ -190,7 +216,7 @@ export function generateMiningFace(
   const pattern = choosePattern(faceType, seed);
 
   let cells = Array.from({ length: 9 }, (_, index) => {
-    return createCell(index, layer.baseBlock, tuning, passives);
+    return createCell(index, chooseBaseBlock(layer, seed + index * 29), tuning, passives);
   });
 
   if (faceType === 'DIAMOND_CORE') {

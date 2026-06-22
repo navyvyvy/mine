@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { Dispatch, ReactNode } from 'react';
 import { MINING_CORE_BRANCH_COUNTS, MINING_CORE_NODES } from '../../data/miningCoreNodes';
 import { getAllImageAssets } from '../../assets/assetRegistry';
@@ -67,16 +68,24 @@ function DebugSection({ title, children }: { title: string; children: ReactNode 
 }
 
 export function DebugSidePanel({ state, dispatch }: Props) {
-  const effectStatus = validateEffectRecognition();
-  const parentStatus = validateParentRelationships();
-  const projected = projection(state);
-  const numericPaths = collectNumericPaths(state.tuning);
-  const viewport = viewportDebugInfo();
-  const targetPoint = state.targetCellIndex === null ? null : getMiningCellTargetPoint(state.targetCellIndex);
-  const currentHitInterval = Math.max(
-    state.tuning.mining.minimumHitIntervalMs,
-    Math.round(state.tuning.mining.baseHitIntervalMs * (1 - state.passives.glovesHitIntervalReduction))
+  const effectStatus = useMemo(() => validateEffectRecognition(), []);
+  const parentStatus = useMemo(() => validateParentRelationships(), []);
+  const projected = useMemo(
+    () => projection(state),
+    [state.depth, state.tuning.progression.projectedAverageFaceClearSeconds, state.tuning.runtime.chapterClearDepthM]
   );
+  const numericPaths = useMemo(() => collectNumericPaths(state.tuning), [state.tuning]);
+  const viewport = viewportDebugInfo();
+  const targetPoint = useMemo(() => (state.targetCellIndex === null ? null : getMiningCellTargetPoint(state.targetCellIndex)), [state.targetCellIndex]);
+  const currentHitInterval = useMemo(
+    () =>
+      Math.max(
+        state.tuning.mining.minimumHitIntervalMs,
+        Math.round(state.tuning.mining.baseHitIntervalMs * (1 - state.passives.glovesHitIntervalReduction))
+      ),
+    [state.passives.glovesHitIntervalReduction, state.tuning.mining.baseHitIntervalMs, state.tuning.mining.minimumHitIntervalMs]
+  );
+  const passiveJson = useMemo(() => JSON.stringify(state.passives, null, 2), [state.passives]);
   const resetAllProgress = () => {
     if (!window.confirm('모든 진행 상황을 초기화할까요?')) return;
     clearGameSave();
@@ -236,7 +245,7 @@ export function DebugSidePanel({ state, dispatch }: Props) {
       </DebugSection>
 
       <DebugSection title="Validation">
-        <pre className="debug-json">{JSON.stringify(state.passives, null, 2)}</pre>
+        <pre className="debug-json">{passiveJson}</pre>
         <dl className="debug-grid">
           <div><dt>Recognized effect keys</dt><dd>{effectStatus.recognized.length}</dd></div>
           <div><dt>Missing effect keys</dt><dd>{effectStatus.missing.length || 'None'}</dd></div>

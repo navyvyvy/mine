@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { CSSProperties, Dispatch } from 'react';
 import { DebugShell } from './components/debug/DebugShell';
 import { MiningFace } from './components/mining/MiningFace';
+import { ResourceAcquisitionLayer } from './components/mining/ResourceAcquisitionLayer';
 import { MiningCorePanel } from './components/panels/MiningCorePanel';
 import { ResourcePanel } from './components/panels/ResourcePanel';
 import { ResourceIcon } from './components/ResourceIcon';
@@ -39,7 +40,30 @@ function formatHudAmount(value: number): string {
   return `${value}`;
 }
 
-function TopHud({ state }: { state: ReturnType<typeof createGameStateFromSave> }) {
+type Bounds = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+type FaceGeometry = {
+  stageRect: Bounds;
+  gridRect: Bounds;
+};
+
+function sameBounds(a: Bounds | null, b: Bounds | null): boolean {
+  if (!a || !b) return a === b;
+  return a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height;
+}
+
+function TopHud({
+  state,
+  registerResourceRef
+}: {
+  state: ReturnType<typeof createGameStateFromSave>;
+  registerResourceRef: (resource: ResourceId, node: HTMLSpanElement | null) => void;
+}) {
   const language = state.settings.language;
   const sessionSeconds = (state.nowMs - state.sessionStartedAtMs) / 1000;
   const ownedResources = RESOURCE_IDS.filter((resource) => state.resources[resource] > 0);
@@ -47,6 +71,16 @@ function TopHud({ state }: { state: ReturnType<typeof createGameStateFromSave> }
     .filter((resource, index, list) => list.indexOf(resource) === index)
     .slice(0, 3);
   const hiddenOwnedCount = ownedResources.filter((resource) => !visibleResources.includes(resource)).length;
+  const latestFlyoutByResource = useMemo(() => {
+    const map = new Map<ResourceId, { id: number; createdAtMs: number }>();
+    for (const flyout of state.flyouts) {
+      const existing = map.get(flyout.resource);
+      if (!existing || flyout.id > existing.id) {
+        map.set(flyout.resource, { id: flyout.id, createdAtMs: flyout.createdAtMs });
+      }
+    }
+    return map;
+  }, [state.flyouts]);
   return (
     <header className="top-hud" aria-label={t(language, 'aria.topHud')}>
       <div className="depth-display">
@@ -57,9 +91,20 @@ function TopHud({ state }: { state: ReturnType<typeof createGameStateFromSave> }
       <span className="session-timer">{formatDuration(sessionSeconds)}</span>
       <div className="resource-strip" aria-label={t(language, 'aria.resources')}>
         {visibleResources.map((resource) => (
-          <span key={resource} className="hud-resource" title={resourceName(language, resource)}>
-            <ResourceIcon resource={resource} size="tiny" />
-            <strong>{formatHudAmount(state.resources[resource])}</strong>
+          <span
+            key={resource}
+            ref={(node) => registerResourceRef(resource, node)}
+            className={`hud-resource ${latestFlyoutByResource.has(resource) ? 'is-acquiring' : ''}`}
+            title={resourceName(language, resource)}
+            data-resource={resource}
+          >
+            <span
+              key={`${resource}-${latestFlyoutByResource.get(resource)?.id ?? 0}`}
+              className="hud-resource-body"
+            >
+              <ResourceIcon resource={resource} size="tiny" />
+              <strong>{formatHudAmount(state.resources[resource])}</strong>
+            </span>
           </span>
         ))}
         {hiddenOwnedCount > 0 && <span className="resource-more">+{hiddenOwnedCount}</span>}
@@ -244,14 +289,24 @@ export function App() {
   const loadResult = useMemo(() => loadGameSave(), []);
   const [state, dispatch] = useReducer(gameReducer, loadResult.save, (save) => createGameStateFromSave(save));
   const latestStateRef = useRef(state);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const resourceRefs = useRef<Partial<Record<ResourceId, HTMLSpanElement | null>>>({});
   const lastSavedRevision = useRef(state.saveRevision);
   const lastPeriodicSaveAt = useRef(Date.now());
   const previousStrikePhase = useRef(state.strike?.phase ?? 'READY');
   const previousFlyoutCount = useRef(state.flyouts.length);
   const previousOverlay = useRef(state.activeOverlay);
+  const [viewportRect, setViewportRect] = useState<Bounds | null>(null);
+  const [hudTargets, setHudTargets] = useState<Partial<Record<ResourceId, Bounds>>>({});
+  const [resourceStripRect, setResourceStripRect] = useState<Bounds | null>(null);
+  const [faceGeometry, setFaceGeometry] = useState<FaceGeometry | null>(null);
   const allowedDebug = debugAllowed();
 
   latestStateRef.current = state;
+
+  const registerResourceRef = useCallback((resource: ResourceId, node: HTMLSpanElement | null) => {
+    resourceRefs.current[resource] = node;
+  }, []);
 
   useEffect(() => {
     if (allowedDebug && queryRequestsDebug()) {
@@ -344,15 +399,64 @@ export function App() {
     }
   }, [loadResult.error]);
 
+  useLayoutEffect(() => {
+    const measure = () => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+      const nextViewportRect = viewport.getBoundingClientRect();
+      const nextResourceStrip = viewport.querySelector('.resource-strip')?.getBoundingClientRect() ?? null;
+      const nextHudTargets: Partial<Record<ResourceId, Bounds>> = {};
+      for (const resource of RESOURCE_IDS) {
+        const node = resourceRefs.current[resource];
+        if (node) {
+          const rect = node.getBoundingClientRect();
+          nextHudTargets[resource] = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+        }
+      }
+
+      const nextViewportBounds = {
+        left: nextViewportRect.left,
+        top: nextViewportRect.top,
+        width: nextViewportRect.width,
+        height: nextViewportRect.height
+      };
+      const nextStripBounds = nextResourceStrip
+        ? {
+            left: nextResourceStrip.left,
+            top: nextResourceStrip.top,
+            width: nextResourceStrip.width,
+            height: nextResourceStrip.height
+          }
+        : null;
+
+      if (!sameBounds(viewportRect, nextViewportBounds)) setViewportRect(nextViewportBounds);
+      if (!sameBounds(resourceStripRect, nextStripBounds)) setResourceStripRect(nextStripBounds);
+
+      let hudChanged = false;
+      for (const resource of RESOURCE_IDS) {
+        if (!sameBounds(hudTargets[resource] ?? null, nextHudTargets[resource] ?? null)) {
+          hudChanged = true;
+          break;
+        }
+      }
+      if (hudChanged) setHudTargets(nextHudTargets);
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [hudTargets, resourceStripRect, viewportRect, state.resources, state.flyouts.length]);
+
   const lanternRevealActive = state.nowMs < state.lanternRevealUntilMs;
   const faceTransitionActive = state.nowMs < state.faceTransitionUntilMs;
   const tempEffect = state.activeRewards[state.activeRewards.length - 1];
+  const faceClearActive = state.nowMs < state.faceClearRevealUntilMs;
 
   return (
     <DebugShell state={state} dispatch={dispatch}>
       <main className="game-shell">
-        <div className="game-viewport">
-          <TopHud state={state} />
+        <div ref={viewportRef} className="game-viewport">
+          <TopHud state={state} registerResourceRef={registerResourceRef} />
           <TempEffectLayer tempEffect={tempEffect} language={state.settings.language} />
           <ToastLayer state={state} hasTempEffect={Boolean(tempEffect)} />
           <MiningFace
@@ -361,14 +465,23 @@ export function App() {
             tuning={state.tuning}
             strike={state.strike}
             targetCellIndex={state.targetCellIndex}
-            flyouts={state.flyouts}
             nowMs={state.nowMs}
             lanternRevealActive={lanternRevealActive}
+            faceClearActive={faceClearActive}
             faceTransitionActive={faceTransitionActive}
             autoEnabled={state.autoEnabled}
             manualMiningEnabled={state.tuning.mining.manualMiningEnabled}
             debugOpen={state.debugOpen}
+            onGeometryChange={setFaceGeometry}
             onManualStrike={(cellIndex) => dispatch({ type: 'MANUAL_CELL_STRIKE', cellIndex, nowMs: Date.now() })}
+          />
+          <ResourceAcquisitionLayer
+            flyouts={state.flyouts}
+            viewportRect={viewportRect}
+            faceGeometry={faceGeometry}
+            hudTargets={hudTargets}
+            resourceStripRect={resourceStripRect}
+            reducedMotion={state.settings.reducedMotion}
           />
           <QuickControls state={state} dispatch={dispatch} />
           <OverlayLayer state={state} dispatch={dispatch} />

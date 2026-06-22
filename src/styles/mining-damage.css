@@ -6,10 +6,12 @@
   overflow: visible;
   opacity: 0.98;
   filter: saturate(0.92) contrast(1.04);
+  transform-box: fill-box;
 }
 
 .damage-layer {
   transform-origin: 50% 50%;
+  transform-box: fill-box;
 }
 
 .damage-main-crack,
@@ -19,9 +21,15 @@
 .damage-hit-point,
 .damage-chip-slab,
 .damage-exposed-face,
+.damage-empty-shell-shadow,
+.damage-empty-shell-lip,
 .damage-empty-rim,
-.damage-empty-cavity {
+.damage-empty-core-shadow,
+.damage-empty-core-glint,
+.damage-empty-ore {
   vector-effect: non-scaling-stroke;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
 }
 
 .damage-main-crack,
@@ -59,30 +67,34 @@
 .damage-impact-scar,
 .damage-chip-slab,
 .damage-exposed-face,
+.damage-empty-shell-shadow,
+.damage-empty-shell-lip,
 .damage-empty-rim,
-.damage-empty-cavity {
+.damage-empty-core-shadow,
+.damage-empty-core-glint,
+.damage-empty-ore {
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0;
 }
 
 .damage-impact-scar {
-  fill: oklch(0.075 0.012 35 / 0.94);
-  stroke: oklch(0.42 0.035 48 / 0.42);
-  stroke-width: 1.1;
+  fill: oklch(0.07 0.01 35 / 0.92);
+  stroke: oklch(0.34 0.028 46 / 0.36);
+  stroke-width: 1;
   mix-blend-mode: multiply;
 }
 
 .damage-hit-point {
-  fill: oklch(0.05 0.01 34 / 0.8);
+  fill: oklch(0.11 0.012 40 / 0.56);
   opacity: 0;
   mix-blend-mode: multiply;
 }
 
 .damage-exposed-face {
-  fill: oklch(0.2 0.025 43 / 0.82);
-  stroke: oklch(0.45 0.035 54 / 0.44);
-  stroke-width: 1.35;
+  fill: oklch(0.18 0.02 42 / 0.84);
+  stroke: oklch(0.38 0.03 50 / 0.4);
+  stroke-width: 1.2;
   filter: drop-shadow(0 2px 0 oklch(0.01 0 0 / 0.22));
 }
 
@@ -96,22 +108,184 @@
 }
 
 .damage-chip-slab {
-  fill: oklch(0.14 0.018 38 / 0.92);
-  stroke: oklch(0.32 0.03 46 / 0.46);
-  stroke-width: 1.25;
+  fill: oklch(0.11 0.016 38 / 0.9);
+  stroke: oklch(0.28 0.025 46 / 0.42);
+  stroke-width: 1.1;
   mix-blend-mode: multiply;
 }
 
-.damage-empty-rim {
-  fill: oklch(0.17 0.025 42 / 0.9);
-  stroke: oklch(0.36 0.035 48 / 0.42);
-  stroke-width: 1.35;
+.damage-empty-shell-shadow {
+  fill: oklch(0.06 0.006 40 / 0.18);
+  stroke: none;
+  mix-blend-mode: multiply;
 }
 
-.damage-empty-cavity {
-  fill: oklch(0.012 0 0 / 0.98);
-  stroke: oklch(0.12 0.015 40 / 0.8);
-  stroke-width: 1.1;
+.damage-empty-shell-lip {
+  fill: oklch(0.82 0.06 88 / 0.28);
+  stroke: oklch(0.98 0.04 94 / 0.16);
+  stroke-width: 0.9;
+  mix-blend-mode: screen;
+}
+
+.damage-empty-rim {
+  fill: none;
+  stroke: oklch(0.34 0.03 52 / 0.52);
+  stroke-width: 1.35;
+  stroke-dasharray: 8 5;
+  filter: drop-shadow(0 1px 0 oklch(0.01 0 0 / 0.18));
+  mix-blend-mode: normal;
+}
+
+.damage-empty-core-shadow {
+  fill: oklch(0.08 0.01 40 / 0.34);
+  stroke: none;
+  mix-blend-mode: multiply;
+  opacity: 0;
+}
+
+.damage-empty-core-glint {
+  fill: oklch(0.94 0.04 92 / 0.32);
+  stroke: none;
+  mix-blend-mode: screen;
+}
+
+.damage-empty-ore {
+  fill: oklch(0.3 0.03 44 / 0.98);
+  stroke: oklch(0.5 0.04 56 / 0.56);
+  stroke-width: 1.08;
+  mix-blend-mode: normal;
+  filter: drop-shadow(0 2px 0 oklch(0.01 0 0 / 0.12));
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.cell-damage-overlay.is-ore .damage-empty-ore {
+  fill: color-mix(in oklch, var(--ore-color) 48%, var(--ore-bright) 52%);
+  stroke: color-mix(in oklch, var(--ore-bright) 56%, oklch(0.38 0.03 50 / 0.52));
+}
+
+.cell-damage-overlay.is-ore .damage-empty-core-shadow {
+  fill: color-mix(in oklch, var(--ore-color) 38%, oklch(0.14 0.018 40 / 0.72));
+  opacity: 0.26;
+}
+
+.cell-damage-overlay.is-ore .damage-empty-core-glint {
+  fill: color-mix(in oklch, var(--ore-bright) 84%, oklch(0.98 0.02 92 / 0.24));
+  opacity: 0.68;
+}
+
+.cell-damage-overlay.is-stone .damage-empty-ore {
+  fill: color-mix(in oklch, oklch(0.24 0.016 44 / 0.95) 72%, oklch(0.08 0.008 38 / 0.86));
+  stroke: oklch(0.36 0.02 50 / 0.54);
+  filter: drop-shadow(0 2px 0 oklch(0.01 0 0 / 0.16));
+}
+
+.cell-damage-overlay.is-stone .damage-empty-core-glint {
+  opacity: 0;
+}
+
+.cell-damage-overlay[data-resource='coal'] .damage-empty-ore {
+  fill: color-mix(in oklch, oklch(0.14 0.012 252) 58%, var(--ore-bright) 42%);
+  stroke: color-mix(in oklch, oklch(0.88 0.018 260 / 0.72) 55%, var(--ore-bright) 45%);
+  filter: drop-shadow(0 0 3px oklch(0.88 0.03 264 / 0.2)) drop-shadow(0 2px 0 oklch(0.01 0 0 / 0.14));
+}
+
+.cell-damage-overlay[data-resource='coal'] .damage-empty-core-shadow {
+  fill: color-mix(in oklch, oklch(0.12 0.014 252) 62%, oklch(0.04 0 0 / 0.82));
+}
+
+.cell-damage-overlay[data-resource='coal'] .damage-empty-core-glint {
+  fill: oklch(0.84 0.02 260 / 0.34);
+  opacity: 0.88;
+}
+
+.cell-damage-overlay[data-resource='coal'] .damage-empty-rim {
+  stroke: oklch(0.62 0.02 262 / 0.58);
+}
+
+.cell-damage-overlay[data-resource='copper'] .damage-empty-ore {
+  fill: color-mix(in oklch, var(--ore-color) 52%, var(--ore-bright) 48%);
+  stroke: color-mix(in oklch, var(--ore-bright) 48%, oklch(0.42 0.04 34 / 0.56));
+}
+
+.cell-damage-overlay[data-resource='copper'] .damage-empty-core-shadow {
+  fill: color-mix(in oklch, oklch(0.34 0.06 34 / 0.7) 58%, oklch(0.18 0.02 28 / 0.8));
+}
+
+.cell-damage-overlay[data-resource='copper'] .damage-empty-core-glint {
+  fill: oklch(0.9 0.05 82 / 0.4);
+}
+
+.cell-damage-overlay[data-resource='copper'] .damage-empty-rim {
+  stroke: oklch(0.82 0.08 62 / 0.5);
+}
+
+.cell-damage-overlay[data-resource='iron'] .damage-empty-ore {
+  fill: color-mix(in oklch, var(--ore-color) 50%, var(--ore-bright) 50%);
+  stroke: color-mix(in oklch, var(--ore-bright) 42%, oklch(0.52 0.04 28 / 0.54));
+}
+
+.cell-damage-overlay[data-resource='iron'] .damage-empty-core-shadow {
+  fill: color-mix(in oklch, oklch(0.32 0.035 26 / 0.78) 64%, oklch(0.12 0.014 22 / 0.78));
+}
+
+.cell-damage-overlay[data-resource='iron'] .damage-empty-core-glint {
+  fill: oklch(0.88 0.03 96 / 0.36);
+}
+
+.cell-damage-overlay[data-resource='iron'] .damage-empty-rim {
+  stroke: oklch(0.7 0.04 40 / 0.52);
+}
+
+.cell-damage-overlay[data-resource='gold'] .damage-empty-ore {
+  fill: color-mix(in oklch, var(--ore-color) 56%, var(--ore-bright) 44%);
+  stroke: color-mix(in oklch, var(--ore-bright) 58%, oklch(0.54 0.06 74 / 0.5));
+}
+
+.cell-damage-overlay[data-resource='gold'] .damage-empty-core-shadow {
+  fill: color-mix(in oklch, oklch(0.48 0.08 74 / 0.76) 54%, oklch(0.22 0.02 42 / 0.72));
+}
+
+.cell-damage-overlay[data-resource='gold'] .damage-empty-core-glint {
+  fill: oklch(0.98 0.06 94 / 0.44);
+}
+
+.cell-damage-overlay[data-resource='gold'] .damage-empty-rim {
+  stroke: oklch(0.92 0.08 86 / 0.54);
+}
+
+.cell-damage-overlay[data-resource='crystal'] .damage-empty-ore {
+  fill: color-mix(in oklch, var(--ore-color) 54%, var(--ore-bright) 46%);
+  stroke: color-mix(in oklch, var(--ore-bright) 56%, oklch(0.5 0.06 218 / 0.5));
+}
+
+.cell-damage-overlay[data-resource='crystal'] .damage-empty-core-shadow {
+  fill: color-mix(in oklch, oklch(0.4 0.06 224 / 0.72) 56%, oklch(0.16 0.015 220 / 0.82));
+}
+
+.cell-damage-overlay[data-resource='crystal'] .damage-empty-core-glint {
+  fill: oklch(0.96 0.05 194 / 0.42);
+}
+
+.cell-damage-overlay[data-resource='crystal'] .damage-empty-rim {
+  stroke: oklch(0.9 0.05 196 / 0.5);
+}
+
+.cell-damage-overlay[data-resource='diamond'] .damage-empty-ore {
+  fill: color-mix(in oklch, var(--ore-color) 58%, var(--ore-bright) 42%);
+  stroke: color-mix(in oklch, var(--ore-bright) 62%, oklch(0.56 0.06 190 / 0.48));
+}
+
+.cell-damage-overlay[data-resource='diamond'] .damage-empty-core-shadow {
+  fill: color-mix(in oklch, oklch(0.48 0.07 192 / 0.7) 50%, oklch(0.18 0.02 186 / 0.8));
+}
+
+.cell-damage-overlay[data-resource='diamond'] .damage-empty-core-glint {
+  fill: oklch(0.98 0.05 188 / 0.5);
+}
+
+.cell-damage-overlay[data-resource='diamond'] .damage-empty-rim {
+  stroke: oklch(0.94 0.06 188 / 0.54);
 }
 
 .stage-intact .damage-main-crack,
@@ -121,8 +295,9 @@
 .stage-intact .damage-hit-point,
 .stage-intact .damage-chip-slab,
 .stage-intact .damage-exposed-face,
+.stage-intact .damage-empty-shell-lip,
 .stage-intact .damage-empty-rim,
-.stage-intact .damage-empty-cavity {
+.stage-intact .damage-empty-ore {
   opacity: 0;
 }
 
@@ -235,7 +410,9 @@
 }
 
 .stage-empty .damage-empty-rim,
-.stage-empty .damage-empty-cavity {
+.stage-empty .damage-empty-core-shadow,
+.stage-empty .damage-empty-core-glint,
+.stage-empty .damage-empty-ore {
   opacity: 1;
 }
 
@@ -246,7 +423,30 @@
 }
 
 .stage-empty .damage-chip-slab {
-  opacity: 0.58;
+  opacity: 0.82;
+}
+
+.stage-empty .damage-empty-shell-shadow {
+  opacity: 0.62;
+}
+
+.stage-empty .damage-empty-shell-lip {
+  opacity: 0.88;
+}
+
+.stage-empty .damage-empty-core-shadow {
+  opacity: 0.94;
+  transform: translate(1.2px, 1.4px) scale(1.05);
+}
+
+.stage-empty .damage-empty-core-glint {
+  opacity: 0.38;
+  transform: translate(-0.5px, -0.8px) scale(0.93);
+}
+
+.stage-empty .damage-empty-ore {
+  opacity: 0.96;
+  transform: translate(0.2px, -0.2px) scale(1.06);
 }
 
 .stage-empty .damage-impact-scar,
@@ -254,6 +454,165 @@
 .stage-empty .damage-exposed-face,
 .stage-empty .damage-main-crack-edge {
   opacity: 0;
+}
+
+.stage-empty .damage-empty-rim {
+  opacity: 0.54;
+  stroke-dasharray: 5 3;
+}
+
+.block-ore .stage-empty .damage-empty-rim {
+  opacity: 0.66;
+}
+
+.block-ore .stage-empty .damage-empty-ore {
+  opacity: 1;
+  mix-blend-mode: normal;
+  filter: saturate(1.18) brightness(1.16);
+}
+
+.block-ore .stage-empty .damage-empty-core-shadow {
+  opacity: 0;
+}
+
+.block-ore .stage-empty .damage-empty-core-glint {
+  opacity: 0.84;
+  transform: translate(0.25px, 0.15px) scale(1);
+}
+
+.block-ore .stage-empty .damage-empty-shell-shadow {
+  opacity: 0;
+}
+
+.block-ore .stage-empty .damage-empty-shell-lip {
+  opacity: 0.72;
+}
+
+.cell-damage-overlay.is-stone.stage-empty .damage-empty-core-glint {
+  opacity: 0;
+}
+
+.cell-damage-overlay[data-resource='coal'].stage-empty .damage-empty-core-glint {
+  opacity: 0.94;
+}
+
+.cell-damage-overlay[data-resource='coal'].stage-empty .damage-empty-core-shadow {
+  fill: color-mix(in oklch, oklch(0.18 0.012 252) 60%, oklch(0.06 0 0 / 0.8));
+}
+
+.cell-damage-overlay[data-resource='coal'].stage-empty .damage-empty-rim {
+  stroke: oklch(0.8 0.02 260 / 0.62);
+}
+
+.mining-cell.is-impact {
+  animation: none;
+  transform: none;
+  filter: none;
+}
+
+.mining-cell.is-impact .damage-layer {
+  animation: cell-impact-fracture 120ms ease-out;
+}
+
+.mining-cell.is-impact .embedded-ore {
+  animation: ore-facet-emphasis 120ms ease-out;
+}
+
+.mining-cell.is-impact .damage-main-crack,
+.mining-cell.is-impact .damage-main-crack-edge,
+.mining-cell.is-impact .damage-branch,
+.mining-cell.is-impact .damage-impact-scar,
+.mining-cell.is-impact .damage-hit-point,
+.mining-cell.is-impact .damage-empty-ore,
+.mining-cell.is-impact .damage-empty-core-glint {
+  filter: drop-shadow(0 0 3px oklch(0.88 0.08 84 / 0.26));
+}
+
+.mining-cell.is-flashing .damage-main-crack,
+.mining-cell.is-flashing .damage-main-crack-edge,
+.mining-cell.is-flashing .damage-branch,
+.mining-cell.is-flashing .damage-impact-scar {
+  opacity: 1;
+}
+
+.mining-cell.is-flashing .damage-main-crack {
+  stroke-width: 4.5;
+  stroke-dashoffset: 10;
+}
+
+.mining-cell.is-flashing .damage-main-crack-edge {
+  stroke-width: 1.2;
+  opacity: 0.34;
+}
+
+.mining-cell.is-flashing .damage-branch {
+  stroke-width: 2.7;
+  opacity: 0.88;
+}
+
+.mining-cell.is-flashing .damage-impact-scar {
+  filter: drop-shadow(0 0 3px oklch(0.78 0.06 58 / 0.24));
+}
+
+.mining-cell.is-flashing .damage-empty-ore,
+.mining-cell.is-flashing .damage-empty-core-glint,
+.mining-cell.is-flashing .damage-empty-shell-lip {
+  opacity: 1;
+}
+
+.mining-cell.is-flashing .damage-empty-ore {
+  filter: drop-shadow(0 0 3px oklch(0.92 0.08 88 / 0.22));
+}
+
+.mining-cell.is-flashing .damage-empty-core-glint {
+  filter: drop-shadow(0 0 2px oklch(0.92 0.08 88 / 0.18));
+}
+
+@keyframes cell-impact-fracture {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  34% {
+    transform: translate(-0.8px, 0.8px) scale(1.01);
+  }
+  68% {
+    transform: translate(0.8px, -0.6px) scale(0.996);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes ore-facet-emphasis {
+  0% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+  }
+  36% {
+    transform: scale(1.035);
+    filter: brightness(1.12) saturate(1.04);
+  }
+  72% {
+    transform: scale(0.995);
+    filter: brightness(0.98) saturate(1.01);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mining-cell.is-impact .damage-layer,
+  .mining-cell.is-impact .embedded-ore,
+  .mining-cell.is-flashing .damage-main-crack,
+  .mining-cell.is-flashing .damage-branch,
+  .mining-cell.is-flashing .damage-impact-scar,
+  .mining-cell.is-flashing .damage-empty-ore,
+  .mining-cell.is-flashing .damage-empty-core-glint {
+    animation: none;
+    transition: none;
+  }
 }
 
 .mining-cell[data-cell-index="0"] .cell-damage-overlay { transform: rotate(-8deg) translate(-1px, -1px); }

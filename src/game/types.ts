@@ -323,6 +323,7 @@ export type GameState = {
   rewardEncounter: RewardEncounter | null;
   lanternRevealUntilMs: number;
   faceTransitionUntilMs: number;
+  faceClearRevealUntilMs: number;
   miningCore: MiningCoreState;
   settings: SettingsState;
   debugOpen: boolean;
