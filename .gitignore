@@ -5,6 +5,7 @@ node_modules/
 dist/
 coverage/
 .vite/
+.playwright-mcp/
 *.tsbuildinfo
 
 # env / local config
@@ -32,4 +33,3 @@ Desktop.ini
 # browser / test artifacts
 playwright-report/
 test-results/
-
